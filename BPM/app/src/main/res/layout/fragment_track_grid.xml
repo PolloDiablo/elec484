@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" tools:context="jeremy.elec484.bpm.TrackFragment">
+
+    <GridView android:id="@android:id/list" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:numColumns="2" />
+
+    <TextView android:id="@android:id/empty" android:layout_width="match_parent"
+        android:layout_height="match_parent" android:gravity="center" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel"
+        android:id="@+id/button3"
+        android:layout_gravity="right|bottom"
+        android:onClick="onCancelSelectTrackClick" />
+
+</FrameLayout>

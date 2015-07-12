@@ -1,0 +1,124 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivityFragment">
+
+    <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/title"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/select_track"
+        android:id="@+id/button"
+        android:layout_below="@+id/title"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="onSelectTrackClick" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/track_name_header"
+        android:id="@+id/trackNameHeader"
+        android:layout_below="@+id/button"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/trackName"
+        android:text="@string/track_name_empty"
+        android:layout_alignTop="@+id/trackNameHeader"
+        android:layout_toRightOf="@+id/trackNameHeader"
+        android:layout_toEndOf="@+id/trackNameHeader" />
+
+    <SeekBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/adjustmentBar"
+        android:layout_below="@+id/adjustmentPrompt"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:progress="50"
+        android:indeterminate="false"
+        android:max="100" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Adjust Playback Speed:"
+        android:id="@+id/adjustmentPrompt"
+        android:layout_below="@+id/trackNameHeader"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/adjustment_header"
+        android:id="@+id/adjustmentHeader"
+        android:layout_below="@+id/adjustmentBar"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/adjustment_empty"
+        android:id="@+id/adjustment"
+        android:layout_below="@+id/adjustmentBar"
+        android:layout_toRightOf="@+id/adjustmentHeader"
+        android:layout_toEndOf="@+id/adjustmentHeader" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/stop"
+        android:id="@+id/stop"
+        android:layout_below="@+id/adjustmentHeader"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/play"
+        android:id="@+id/play"
+        android:layout_below="@+id/adjustment"
+        android:layout_toRightOf="@+id/stop"
+        android:layout_toEndOf="@+id/stop" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pause"
+        android:id="@+id/pause"
+        android:layout_below="@+id/adjustment"
+        android:layout_toRightOf="@+id/play"
+        android:layout_toEndOf="@+id/play" />
+
+    <SeekBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/seekBar"
+        android:progress="0"
+        android:indeterminate="false"
+        android:max="100"
+        android:layout_below="@+id/stop"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/adjustmentBar"
+        android:layout_alignEnd="@+id/adjustmentBar" />
+
+</RelativeLayout>
