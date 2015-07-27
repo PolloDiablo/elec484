@@ -15,6 +15,10 @@ public class MainActivity extends AppCompatActivity
 
     private static MediaPlayer mMediaPlayer;
 
+    public static MediaPlayer getMediaPlayer(){
+        return mMediaPlayer;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +77,7 @@ public class MainActivity extends AppCompatActivity
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, new TrackFragment())
+                .addToBackStack("MainActivityFragment") //Enables back-button functionality
                 .commit();
     }
     /**
@@ -82,6 +87,7 @@ public class MainActivity extends AppCompatActivity
     public void onCancelSelectTrackClick(View v) {
         Log.d("MainActivity", "Opening track selector...");
         FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.popBackStack("MainActivityFragment", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fragmentManager.beginTransaction()
                 .replace(R.id.container, new MainActivityFragment())
                 .commit();
@@ -91,6 +97,7 @@ public class MainActivity extends AppCompatActivity
     public void onFragmentInteraction(Track track) {
         Log.d("MainActivity", "Track selection made: " + track.getName());
         FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.popBackStack("MainActivityFragment", FragmentManager.POP_BACK_STACK_INCLUSIVE);
         fragmentManager.beginTransaction()
                 .replace(R.id.container, MainActivityFragment.newInstance(track))
                 .commit();
@@ -101,7 +108,6 @@ public class MainActivity extends AppCompatActivity
             }
             mMediaPlayer.setDataSource(track.getPath());
             mMediaPlayer.prepare();
-            mMediaPlayer.start();
         } catch (Exception e) {
             Log.w("MainActivity", "ERROR: "+e.getMessage());
         }

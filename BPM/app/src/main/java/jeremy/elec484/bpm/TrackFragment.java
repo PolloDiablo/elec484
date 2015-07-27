@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,13 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A fragment representing a list of Items.
- * <p/>
- * Large screen devices (such as tablets) are supported by replacing the ListView
- * with a GridView.
- * <p/>
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
- * interface.
+ * Displays a list of wav files on the device in a selectable listView
  */
 public class TrackFragment extends Fragment implements AbsListView.OnItemClickListener {
 
@@ -37,18 +32,63 @@ public class TrackFragment extends Fragment implements AbsListView.OnItemClickLi
      */
     private ListAdapter mAdapter;
 
-    /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
-     */
-    public TrackFragment() {
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        displayTrackList();
+        // Clear list of tracks
+        tracks.clear();
+
+        /** For reference:
+        http://z4android.blogspot.ca/2011/06/displaying-list-of-music-files-stored.html
+
+
+        Query Parameters:
+        http://developer.android.com/reference/android/content/ContentResolver.html
+        Uri uri
+            The URI, using the content:// scheme, for the content to retrieve.
+        String[] projection
+            A list of which columns to return.
+            Passing null will return all columns, which is inefficient.
+        String selection
+            A filter declaring which rows to return, formatted as an SQL WHERE clause.
+            Passing null will return all rows for the given URI.
+        String[] selectionArgs
+            The args (if any) for the above selection. Specified by "?s" in selection.
+        String sortOrder
+            How to order the rows, formatted as an SQL ORDER BY clause.
+            Passing null will use the default sort order, which may be unordered.
+         */
+
+        // Get a list of all audio files
+        final Cursor mCursor = getActivity().getApplicationContext().getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,        // uri (all songs on SD card)
+                new String[]{   MediaStore.Audio.Media.TITLE,       // projection (title and path)
+                        MediaStore.Audio.Media.DATA},
+                null,//MediaStore.Audio.Media.TITLE,                // selection
+                null,                                               // selectionArgs
+                "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC"); // sortOrder
+
+        // Iterate through the list, keep only the wav files
+        if (mCursor.moveToFirst()) {
+            do {
+                // Get the title and the path
+                String name = mCursor.getString(0);
+                String path = mCursor.getString(1);
+
+                // Check if its a .wav file
+                if(mCursor.getString(1).endsWith(".wav")) {
+                    Log.d("TrackFragment", "Adding track to list: "+ mCursor.getString(1));
+                    tracks.add(new Track(name, path));
+                }
+
+            } while (mCursor.moveToNext());
+        }
+        mCursor.close();
+
+        // Display the list of tracks
+        mAdapter = new ArrayAdapter<>(getActivity(),
+                android.R.layout.simple_list_item_1, android.R.id.text1, tracks);
     }
 
     @Override
@@ -113,50 +153,5 @@ public class TrackFragment extends Fragment implements AbsListView.OnItemClickLi
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(Track track);
     }
-
-    /**
-     * http://z4android.blogspot.ca/2011/06/displaying-list-of-music-files-stored.html
-     */
-    private void displayTrackList(){
-        tracks.clear();
-
-        /*
-        .query from: http://developer.android.com/reference/android/content/ContentResolver.html
-        Uri uri
-            The URI, using the content:// scheme, for the content to retrieve.
-        String[] projection
-            A list of which columns to return.
-            Passing null will return all columns, which is inefficient.
-        String selection
-            A filter declaring which rows to return, formatted as an SQL WHERE clause.
-            Passing null will return all rows for the given URI.
-        String[] selectionArgs
-            The args (if any) for the above selection. Specified by "?s" in selection.
-        String sortOrder
-            How to order the rows, formatted as an SQL ORDER BY clause.
-            Passing null will use the default sort order, which may be unordered.
-         */
-        final Cursor mCursor = getActivity().getApplicationContext().getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,        // uri (all songs on SD card)
-                new String[]{   MediaStore.Audio.Media.TITLE,       // projection (title and path)
-                               MediaStore.Audio.Media.DATA},
-                null,//MediaStore.Audio.Media.TITLE,                // selection
-                null,                                               // selectionArgs
-                "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC"); // sortOrder
-
-        if (mCursor.moveToFirst()) {
-            do {
-                //  Store the title and the path
-                tracks.add (new Track(mCursor.getString(0), mCursor.getString(1)) );
-                //Log.d("TrackFragment", mCursor.getString(0) + "    " + mCursor.getString(1) );
-            } while (mCursor.moveToNext());
-        }
-        mCursor.close();
-
-        mAdapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, tracks);
-
-    }
-
 
 }
