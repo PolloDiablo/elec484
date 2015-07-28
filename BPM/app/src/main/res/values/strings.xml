@@ -10,7 +10,10 @@
     <string name="adjustment_prompt">"Select Playback Speed: "</string>
     <string name="adjustment_selected">"Adjustment Selected: "</string>
     <string name="adjustment_empty">YOU SHOULDN\'T SEE THIS</string>
+
+    <string name="adjustment_process">Process</string>
     <string name="adjustment_processing">Processing...</string>
+
 
     <string name="play">Play</string>
     <string name="pause">Pause</string>

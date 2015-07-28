@@ -104,8 +104,9 @@ public class MainActivity extends AppCompatActivity
 
         try {
             if (mMediaPlayer.isPlaying()) {
-                mMediaPlayer.reset();
+                mMediaPlayer.stop();
             }
+            mMediaPlayer.reset();
             mMediaPlayer.setDataSource(track.getPath());
             mMediaPlayer.prepare();
         } catch (Exception e) {

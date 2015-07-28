@@ -3,7 +3,9 @@
     android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivityFragment">
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivityFragment"
+    android:id="@+id/relativeLayout"
+    android:focusableInTouchMode="false">
 
     <Button
         android:layout_width="wrap_content"
@@ -64,7 +66,8 @@
         android:layout_below="@+id/adjustmentBar"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:paddingBottom="32dp" />
+        android:paddingBottom="64dp"
+        android:elegantTextHeight="false" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -80,7 +83,7 @@
         android:layout_height="wrap_content"
         android:text="@string/play"
         android:id="@+id/play"
-        android:layout_alignTop="@+id/pause"
+        android:layout_below="@+id/adjustmentHeader"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -89,7 +92,7 @@
         android:layout_height="wrap_content"
         android:text="@string/pause"
         android:id="@+id/pause"
-        android:layout_below="@+id/adjustmentHeader"
+        android:layout_alignTop="@+id/play"
         android:layout_toRightOf="@+id/play"
         android:layout_toEndOf="@+id/play" />
 
@@ -99,7 +102,7 @@
         android:id="@+id/seekBar"
         android:progress="0"
         android:indeterminate="false"
-        android:max="100"
+        android:max="1000"
         android:layout_below="@+id/play"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
@@ -136,14 +139,13 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
-    <TextView
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/adjustment_processing"
-        android:id="@+id/adjustmentProcessing"
-        android:layout_alignTop="@+id/play"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:text="@string/adjustment_process"
+        android:id="@+id/adjustmentProcess"
+        android:layout_below="@+id/adjustmentValue"
+        android:layout_alignRight="@+id/adjustmentHigh"
+        android:layout_alignEnd="@+id/adjustmentHigh" />
 
 </RelativeLayout>

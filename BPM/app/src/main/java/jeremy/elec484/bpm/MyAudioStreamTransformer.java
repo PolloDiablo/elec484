@@ -18,11 +18,6 @@ public class MyAudioStreamTransformer {
      */
     private final Config config;
 
-    double ratio = 2.0;
-    int windowSize = 2048;
-    int R_a = (int) Math.floor(windowSize * 0.03125);
-    int R_s = (int) (R_a * ratio);
-
     /**
      * Create audio stream transformer, with the given configuration.
      *
@@ -35,7 +30,11 @@ public class MyAudioStreamTransformer {
     /**
      * Take things into and then out of the frequency domain.
      */
-    public byte[] doConversionsAndTransforming(final byte[] buffer) {
+    public byte[] doConversionsAndTransforming(final byte[] buffer, final double adjustmentRatio) {
+
+        final int windowSize = 2048;
+        final int R_a = (int) Math.floor(windowSize * 0.03125);
+        final int R_s = (int) (R_a * adjustmentRatio);
 
         if (config.numberOfChannels == 1) {
             // Just deal with one channel as normal
@@ -368,11 +367,20 @@ public class MyAudioStreamTransformer {
         }
         return toReturn;
     }
+    /*
+    private short[] fromMonoDoubleArray(final double[] toOutputDouble) {
+        short[] toReturn = new short[toOutputDouble.length];
+        for (int i = 0; i < toOutputDouble.length; i ++) {
+            toReturn[i] = (short) toOutputDouble[i];
+        }
+        return toReturn;
+    }*/
 
     /**
      * Based on the configuration encoding frame size and endianness. Works on a
      * mono array.
      */
+
     private double[] toMonoDoubleArray(final byte[] buffer) {
         double[] toReturn = new double[buffer.length / config.monoFrameSize];
         for (int i = 0; i < buffer.length; i += config.monoFrameSize) {
@@ -391,6 +399,14 @@ public class MyAudioStreamTransformer {
         }
         return toReturn;
     }
+    /*
+    private double[] toMonoDoubleArray(final short[] buffer) {
+        double[] toReturn = new double[buffer.length];
+        for (int i = 0; i < buffer.length; i ++) {
+            toReturn[i / config.monoFrameSize] = buffer[i];
+        }
+        return toReturn;
+    }*/
 
     /*
      * Applies HanningWindow to input x
