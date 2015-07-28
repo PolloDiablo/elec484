@@ -15,6 +15,8 @@ package jeremy.elec484.bpm;
  * limitations under the License.
  */
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -200,8 +202,13 @@ public class WaveHeader {
         }
 
         /* data chunk */
-        readId(in, "data");
-        mNumBytes = readInt(in);
+        try{
+            readId(in, "data");
+            mNumBytes = readInt(in);
+        } catch (IOException e) {
+            Log.w("WaveHeader", "Could not read data size");
+        }
+
 
         return HEADER_LENGTH;
     }

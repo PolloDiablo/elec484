@@ -7,7 +7,6 @@ import java.nio.ByteOrder;
  */
 public class Config {
     public final int encodeFrameSize;
-    private final int encodeFrameLength;
     public final int numberOfChannels;
     public final ByteOrder byteOrder;
     public final double sampleRate;
@@ -32,18 +31,17 @@ public class Config {
      * @param byteOrderIn
      * @param sampleRateIn
      */
-    public Config(final int encodeFrameSizeIn, final int encodeFrameLength,
+    public Config(final int encodeFrameSizeIn, final int myInputTotalBytes,
                   int numberOfChannels, final ByteOrder byteOrderIn,
                   final double sampleRateIn) {
 
         this.encodeFrameSize = encodeFrameSizeIn;
-        this.encodeFrameLength = encodeFrameLength;
+        this.myInputTotalBytes = myInputTotalBytes;
         this.numberOfChannels = numberOfChannels;
         this.byteOrder = byteOrderIn;
         this.sampleRate = sampleRateIn;
 
         monoFrameSize = encodeFrameSize / numberOfChannels;
-        myInputTotalBytes = encodeFrameLength * encodeFrameSize;
     }
 
 	/*

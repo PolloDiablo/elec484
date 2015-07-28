@@ -30,19 +30,19 @@ public class MyAudioStreamTransformer {
     /**
      * Take things into and then out of the frequency domain.
      */
-    public byte[] doConversionsAndTransforming(final byte[] buffer, final double adjustmentRatio) {
+    public byte[] doConversionsAndTransforming(byte[] buffer, final double adjustmentRatio) {
 
-        final int windowSize = 2048;
-        final int R_a = (int) Math.floor(windowSize * 0.03125);
+        final int windowSize = 1024;
+        //final int R_a = (int) Math.floor(windowSize * 0.03125);
+        final int R_a = (int) Math.floor(windowSize * 0.125);
         final int R_s = (int) (R_a * adjustmentRatio);
 
         if (config.numberOfChannels == 1) {
             // Just deal with one channel as normal
             double[] toTransform = toMonoDoubleArray(buffer);
-            // windowSize = toTransform.length / 2;
-            // R_a = toTransform.length / 2;
-            // R_s = toTransform.length / 2;
+            buffer = null; //MEMORY?
             double[] toOutputDouble = phasevocoder(toTransform, windowSize, R_a, R_s);
+            toTransform = null; //MEMORY?
             return fromMonoDoubleArray(toOutputDouble);
 
         } else if (config.numberOfChannels == 2) {
@@ -62,20 +62,23 @@ public class MyAudioStreamTransformer {
                     bufferRight[monoFrameStart + innerIndex] = buffer[fullFrameStart + config.monoFrameSize + innerIndex];
                 }
             }
+            buffer = null; //MEMORY?
 
             // Perform computations
 
             double[] leftToTransform = toMonoDoubleArray(bufferLeft);
-            // double[] leftToOutputDouble = transformCode(leftToTransform, co);
+            bufferLeft = null; //MEMORY?
             double[] leftToOutputDouble = phasevocoder(leftToTransform,windowSize, R_a, R_s);
-
+            leftToTransform = null; //MEMORY?
             byte[] leftToOutputBytes = fromMonoDoubleArray(leftToOutputDouble);
+            leftToOutputDouble = null; //MEMORY?
 
             double[] rightToTransform = toMonoDoubleArray(bufferRight);
-            // double[] rightToOutputDouble = transformCode(rightToTransform,
-            // co);
+            bufferRight = null; //MEMORY?
             double[] rightToOutputDouble = phasevocoder(rightToTransform, windowSize, R_a, R_s);
+            rightToTransform = null; //MEMORY?
             byte[] rightToOutputBytes = fromMonoDoubleArray(rightToOutputDouble);
+            rightToOutputDouble = null; //MEMORY?
 
             // Recombine channels
             // Note: output size NOT necessarily equal to input size
@@ -91,8 +94,9 @@ public class MyAudioStreamTransformer {
                     toOutputBytes[fullFrameStart + innerIndex] = leftToOutputBytes[monoFrameStart + innerIndex];
                     toOutputBytes[fullFrameStart + config.monoFrameSize + innerIndex] = rightToOutputBytes[monoFrameStart + innerIndex];
                 }
-
             }
+            leftToOutputBytes = null; //MEMORY?
+            rightToOutputBytes = null; //MEMORY?
 
             return toOutputBytes;
 
@@ -161,7 +165,11 @@ public class MyAudioStreamTransformer {
 
         // For the phase vocoding
         // Store the phase component of each sample in the window
-        double[] currentXPhases = new double[windowSize];
+        double[] windowTime = new double[windowSize];
+        Complex[] windowZpf;
+        double[] previousPhases = new double[windowSize];
+        double[] currentPhases = new double[windowSize];
+        double[] phaseChanges = new double[windowSize];
         double[] yPhases = new double[windowSize];
 
         // We cannot calculate the phase change on the 1st window
@@ -182,96 +190,81 @@ public class MyAudioStreamTransformer {
         // Apply windowing
         // Increment by R_a (analysis hop size)
         // Stop before the last WINDOW_SIZE, so we don't read out-of-bounds
-        for (int windowIndex = 0; windowIndex < totalWindows; windowIndex++) {
-            // Get window bounds
-            int analysisWindowStart = windowIndex * R_a;
-            int synthesisWindowStart = windowIndex * R_s;
+        int analysisWindowStart = 0;
+        int synthesisWindowStart = 0;
+        double twoPI = 2.0 * Math.PI;
+        double hanningConstant = twoPI / windowSize;
 
-            // Analysis
-            double[] xWindow = new double[windowSize];
+        for (int windowIndex = 0; windowIndex < totalWindows; windowIndex++) {
+
+            // Perform Analysis (get the Window)
+            // The window is a hanning window, so apply this function
             int index = analysisWindowStart;
             for (int n = 0; n < windowSize; n++) {
-                xWindow[n] = x[index];
-
+                windowTime[n] = x[index] * 0.5 * (1.0 - Math.cos(n * hanningConstant));
                 index++;
             }
 
-            xWindow = hanningWindow(xWindow);
-
-            // Apply circular shift to windows in time domain
-            double[] xWindowShifted = circularShift(xWindow);
+            // Apply circular shift to window in time domain
+            windowTime = circularShift(windowTime);
 
             // Get FFT of window
-            Complex[] xWindowZpfShifted = transformer.transform(xWindowShifted, TransformType.FORWARD);
+            windowZpf = transformer.transform(windowTime, TransformType.FORWARD);
 
             // =========================
             // Time-Frequency Processing
 
-            // Get the magnitude
-            double[] xMagnitudes = new double[windowSize];
+            // Get the magnitude and phases
+            System.arraycopy(currentPhases, 0, previousPhases, 0, windowSize);
 
             for (int i = 0; i < windowSize; i++) {
-                xMagnitudes[i] = xWindowZpfShifted[i].abs();
-            }
+                currentPhases[i] = windowZpf[i].getArgument();
+                // Get the phase of the previous window and the current window
+                if (firsttime) {
+                    // First window: output phase
+                    yPhases[i] = currentPhases[i];
+                } else {
+                    // Any other cycle
 
-            // Get the phase of the previous window and the current window
-            double[] previousXPhases = new double[windowSize];
-            System.arraycopy(currentXPhases, 0, previousXPhases, 0, windowSize);
+                    // Calculate phase change between current and previous window
+                    phaseChanges[i] = currentPhases[i] - previousPhases[i];
 
-            for (int i = 0; i < windowSize; i++) {
-                currentXPhases[i] = xWindowZpfShifted[i].getArgument();
-            }
+                    // Unwrap the phase change
+                    int number = (int) Math.round((phaseChanges[i] - windowUnwrapper[i]) / (twoPI));
+                    phaseChanges[i] = phaseChanges[i] - number * twoPI;
 
-            if (firsttime) {
-                // First window: output phase
-                System.arraycopy(currentXPhases, 0, yPhases, 0, windowSize);
-                firsttime = false;
-            } else {
-                // Calculate phase change between current and previous window
-                double[] phaseChanges = new double[windowSize];
-                for (int i = 0; i < windowSize; i++) {
-                    phaseChanges[i] = currentXPhases[i] - previousXPhases[i];
+                    // Adjust phase by hopRatio (R_s/R_a) to do time stretching
+                    phaseChanges[i] = hopRatio * phaseChanges[i];
+
+                    // The phase of y keeps increasing (add to y from previous)
+                    yPhases[i] = yPhases[i] + phaseChanges[i];
                 }
 
-                // Unwrap the phase change
-                double[] unwrappedPhaseChanges = new double[windowSize];
-                for (int i = 0; i < windowSize; i++) {
-                    int number = (int) Math.round((phaseChanges[i] - windowUnwrapper[i]) / (2.0 * Math.PI));
-                    unwrappedPhaseChanges[i] = phaseChanges[i] - number * 2.0 * Math.PI;
-                }
-
-                // Adjust phase by hopRatio (R_s/R_a) to do time stretching
-                double[] yPhaseAdjusted = new double[windowSize];
-                for (int i = 0; i < windowSize; i++) {
-                    yPhaseAdjusted[i] = hopRatio * unwrappedPhaseChanges[i];
-                }
-
-                // The phase of y keeps increasing (add to y from previous)
-                for (int i = 0; i < windowSize; i++) {
-                    yPhases[i] = yPhases[i] + yPhaseAdjusted[i];
-                }
-
+                // Get y values
+                windowZpf[i] = new Complex(windowZpf[i].abs() * Math.cos(yPhases[i]), windowZpf[i].abs() * Math.sin(yPhases[i]));
             }
             // =========================
-            Complex[] yWindowZpfShifted = new Complex[windowSize];
-            for (int i = 0; i < windowSize; i++) {
-                yWindowZpfShifted[i] = new Complex(xMagnitudes[i] * Math.cos(yPhases[i]), xMagnitudes[i] * Math.sin(yPhases[i]));
-            }
 
             // Inverse FFT of window
-            Complex[] yWindowShifted = transformer.transform(yWindowZpfShifted, TransformType.INVERSE);
-            double[] yWindow = toRealOnly(yWindowShifted);
+            windowZpf = transformer.transform(windowZpf, TransformType.INVERSE);
+            for (int i = 0; i < windowZpf.length; i++) {
+                windowTime[i] = windowZpf[i].getReal(); // abs()?
+            }
 
             // Undo the circular shift in time domain
-            yWindow = circularShift(yWindow);
+            windowTime = circularShift(windowTime);
 
             // Synthesis
             index = synthesisWindowStart;
             for (int n = 0; n < windowSize; n++) {
-                output[index] = output[index] + yWindow[n];
+                output[index] = output[index] + windowTime[n];
                 index++;
             }
 
+            // Get window bounds for next window
+            analysisWindowStart += R_a;
+            synthesisWindowStart += R_s;
+            firsttime = false;
         }
 
         // Adjust for window overlap
@@ -287,47 +280,6 @@ public class MyAudioStreamTransformer {
 		 * } } System.out.println("New max: " + getMax(output));
 		 */
         return output;
-    }
-
-    /**
-     * Perform the FFT transforming.
-     *
-     * @param toTransform
-     * @param co
-     * @return
-     */
-	/*
-	 * private double[] transformCode(final double[] toTransform, final
-	 * ComplexOperator co) {
-	 *
-	 * System.out.println(); System.out.println("Transforming...");
-	 * System.out.println("Before transform length = " + toTransform.length);
-	 *
-	 * // FFT it FastFourierTransformer transformer = new
-	 * FastFourierTransformer(DftNormalization.STANDARD); Complex[] toMathData =
-	 * transformer.transform(toTransform, TransformType.FORWARD);
-	 * System.out.println("FFT output length = " + toMathData.length);
-	 *
-	 * // Do something with the data. Complex[] mathedData =
-	 * co.doMath(toMathData, config);
-	 *
-	 * // Now transform it back Complex[] toOutputComplex =
-	 * transformer.transform(mathedData, TransformType.INVERSE); // Should be
-	 * all real? double[] toOutputDouble = toRealOnly(toOutputComplex);
-	 *
-	 * System.out.println(); return toOutputDouble; // Time-return
-	 * DelayBasedFilter.doMath(toTransform, config); }
-	 */
-
-    /**
-     * Keep the real pieces only of the recreated signal.
-     */
-    private static double[] toRealOnly(final Complex[] toOutputComplex) {
-        double[] toReturn = new double[toOutputComplex.length];
-        for (int i = 0; i < toOutputComplex.length; i++) {
-            toReturn[i] = toOutputComplex[i].getReal(); // abs()?
-        }
-        return toReturn;
     }
 
     /*********************************************/
@@ -408,17 +360,6 @@ public class MyAudioStreamTransformer {
         return toReturn;
     }*/
 
-    /*
-     * Applies HanningWindow to input x
-     */
-    private double[] hanningWindow(final double[] x) {
-        double[] y = new double[x.length];
-        for (int i = 0; i < x.length; i++) {
-            y[i] = x[i] * 0.5 * (1.0 - Math.cos(i * 2.0 * Math.PI / x.length));
-        }
-        return y;
-    }
-
     /**
      * Returns max value in array
      */
@@ -448,12 +389,12 @@ public class MyAudioStreamTransformer {
     /**
      * Circular shift by windowSize/2
      */
-    private double[] circularShift(final double[] x) {
-        double[] y = new double[x.length];
-        int writeIndex = x.length / 2;
-        for (double aX : x) {
+    private double[] circularShift(double[] input) {
+        double[] y = new double[input.length];
+        int writeIndex = input.length / 2;
+        for (double aX : input) {
             y[writeIndex] = aX;
-            writeIndex = (writeIndex + 1) % x.length;
+            writeIndex = (writeIndex + 1) % input.length;
         }
         return y;
     }

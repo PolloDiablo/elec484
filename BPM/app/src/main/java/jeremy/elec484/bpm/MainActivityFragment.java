@@ -151,9 +151,6 @@ public class MainActivityFragment extends Fragment {
                 int tickSize = songLength / 1000;
 
                 mediaPlayer.seekTo(tickSize * seekBar.getProgress());
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.start();
-                }
             }
         });
 
@@ -267,6 +264,7 @@ public class MainActivityFragment extends Fragment {
             // Stop mediaPlayer
             MediaPlayer mediaPlayer = MainActivity.getMediaPlayer();
             if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
                 savedPositionRatio = mediaPlayer.getCurrentPosition()/(double)mediaPlayer.getDuration();
             }else{
                 savedPositionRatio = 0;
@@ -293,7 +291,6 @@ public class MainActivityFragment extends Fragment {
             try {
                 mediaPlayer.setDataSource(newtpath);
                 mediaPlayer.prepare();
-                mediaPlayer.start();
                 mediaPlayer.seekTo((int) (savedPositionRatio * mediaPlayer.getDuration()));
             } catch (Exception e) {
                 Log.w("MainActivityFragment", "ERROR: " + e.getMessage());
