@@ -185,8 +185,6 @@ public class MyAudioStreamTransformer {
         // For FFT later
         FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
 
-        // TODO optimize!
-
         // Apply windowing
         // Increment by R_a (analysis hop size)
         // Stop before the last WINDOW_SIZE, so we don't read out-of-bounds
@@ -272,13 +270,6 @@ public class MyAudioStreamTransformer {
             output[i] = output[i] * analysisAmplitudeScale * hopRatio;
         }
 
-        // Normalize, if necessary TODO
-		/*
-		 * double max = getMax(output); double min = getMin(output);
-		 * System.out.println("Old max: " + max); if (max > 1) { for (int i = 0;
-		 * i < outputLength; i++) { output[i] = (output[i] - min) / (max - min);
-		 * } } System.out.println("New max: " + getMax(output));
-		 */
         return output;
     }
 
@@ -350,40 +341,6 @@ public class MyAudioStreamTransformer {
             }
         }
         return toReturn;
-    }
-    /*
-    private double[] toMonoDoubleArray(final short[] buffer) {
-        double[] toReturn = new double[buffer.length];
-        for (int i = 0; i < buffer.length; i ++) {
-            toReturn[i / config.monoFrameSize] = buffer[i];
-        }
-        return toReturn;
-    }*/
-
-    /**
-     * Returns max value in array
-     */
-    private double getMax(final double[] x) {
-        double max = Double.MIN_VALUE;
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] > max) {
-                max = x[i];
-            }
-        }
-        return max;
-    }
-
-    /**
-     * Returns min value in array
-     */
-    private double getMin(final double[] x) {
-        double min = Double.MAX_VALUE;
-        for (int i = 0; i < x.length; i++) {
-            if (x[i] < min) {
-                min = x[i];
-            }
-        }
-        return min;
     }
 
     /**

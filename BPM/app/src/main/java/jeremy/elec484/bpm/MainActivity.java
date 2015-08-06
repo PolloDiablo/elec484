@@ -102,17 +102,6 @@ public class MainActivity extends AppCompatActivity
                 .replace(R.id.container, MainActivityFragment.newInstance(track))
                 .commit();
 
-        try {
-            if (mMediaPlayer.isPlaying()) {
-                mMediaPlayer.stop();
-            }
-            mMediaPlayer.reset();
-            mMediaPlayer.setDataSource(track.getPath());
-            mMediaPlayer.prepare();
-        } catch (Exception e) {
-            Log.w("MainActivity", "ERROR: "+e.getMessage());
-        }
-
     }
 
 }

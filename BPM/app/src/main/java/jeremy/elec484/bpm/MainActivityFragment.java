@@ -1,5 +1,7 @@
 package jeremy.elec484.bpm;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -163,6 +165,19 @@ public class MainActivityFragment extends Fragment {
         updateVisibilityOfTrackOptions(getActivity());
         updateTrackTitle(getActivity());
 
+        // Reload the media player
+        MediaPlayer mediaPlayer = MainActivity.getMediaPlayer();
+        try {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(trackPath);
+            mediaPlayer.prepare();
+        } catch (Exception e) {
+            Log.w("MainActivityFragment", "ERROR: "+e.getMessage());
+        }
+
         // Have a thread periodically (every 0.1s) update the seek bar
         handler = new Handler();
         handler.removeCallbacks(moveSeekBarThread);
@@ -240,6 +255,10 @@ public class MainActivityFragment extends Fragment {
             long elapsedTime = stopTime - startTime;
             Log.d("MainActivityFragment","Processing Time: " + elapsedTime/1000.0 + " seconds");
             Log.d("MainActivityFragment", "Path being used " + newtpath);
+
+            ActivityManager activityManager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+
+            Log.d("MainActivityFragment", "MEMORY: " + activityManager.getMemoryClass() + "  " + activityManager.getLargeMemoryClass());
 
             return ""; // Should be able to remove this...
         }

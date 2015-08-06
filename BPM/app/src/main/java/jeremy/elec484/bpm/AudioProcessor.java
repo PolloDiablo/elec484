@@ -75,14 +75,18 @@ public class AudioProcessor {
             Config myConfig = androidConfig(waveHeader);
 
             // Pad input bytes to a power of 2
-            inputBytes = padInputBytes(inputBytes,myConfig);
+            // Not necessary, as we aren't doing a full-length FFT, only an FFT on the windows
+            // inputBytes = padInputBytes(inputBytes,myConfig);
 
             // Process
             MyAudioStreamTransformer asti = new MyAudioStreamTransformer(myConfig);
             byte[] outputBytes = asti.doConversionsAndTransforming(inputBytes, adjustmentRatio);
 
             // Update header with new body length
-            waveHeader.setNumBytes(outputBytes.length);
+            // Note that the outputBytes will be padded with a bunch of zeros...
+            int outputByteCount = (int) ((inputBytes.length * adjustmentRatio));
+
+            waveHeader.setNumBytes(outputByteCount);
 
             // Write header and body to output stream
             FileOutputStream outStream = new FileOutputStream(output);
